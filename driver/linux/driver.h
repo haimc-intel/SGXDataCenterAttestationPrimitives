@@ -12,7 +12,6 @@
 #include <uapi/asm/sgx.h>
 #include "sgx.h"
 
-#define SGX_DRV_NR_DEVICES	2
 #define SGX_EINIT_SPIN_COUNT	20
 #define SGX_EINIT_SLEEP_COUNT	50
 #define SGX_EINIT_SLEEP_TIME	20
