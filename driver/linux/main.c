@@ -243,9 +243,7 @@ static bool __init sgx_page_cache_init(void)
 	u64 pa, size;
 	int i;
 
-	BUILD_BUG_ON(SGX_MAX_EPC_SECTIONS > (SGX_EPC_SECTION_MASK + 1));
-
-	for (i = 0; i < (SGX_MAX_EPC_SECTIONS + 1); i++) {
+	for (i = 0; i <= ARRAY_SIZE(sgx_epc_sections); i++) {
 		cpuid_count(SGX_CPUID, i + SGX_CPUID_FIRST_VARIABLE_SUB_LEAF,
 			    &eax, &ebx, &ecx, &edx);
 
@@ -254,13 +252,12 @@ static bool __init sgx_page_cache_init(void)
 			break;
 
 		if (type != SGX_CPUID_SUB_LEAF_EPC_SECTION) {
-			pr_err_once("Unknown sub-leaf type: %u\n", type);
+			pr_err_once("Unknown EPC section type: %u\n", type);
 			break;
 		}
 
-		if (i == SGX_MAX_EPC_SECTIONS) {
-			pr_warn("More than %d EPC sections\n",
-				SGX_MAX_EPC_SECTIONS);
+		if (i == ARRAY_SIZE(sgx_epc_sections)) {
+			pr_warn("No free slot for an EPC section\n");
 			break;
 		}
 
@@ -270,7 +267,7 @@ static bool __init sgx_page_cache_init(void)
 		pr_info("EPC section 0x%llx-0x%llx\n", pa, pa + size - 1);
 
 		if (!sgx_alloc_epc_section(pa, size, i, &sgx_epc_sections[i])) {
-			pr_err("No memory for the EPC section\n");
+			pr_err("No free memory for an EPC section\n");
 			break;
 		}
 

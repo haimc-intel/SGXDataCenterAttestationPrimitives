@@ -11,24 +11,6 @@
 #include <asm/traps.h>
 #include "sgx.h"
 
-/**
- * enum sgx_encls_leaf - ENCLS leaf function type
- * %ECREATE:	Create an uninitialized enclave.
- * %EADD:	Add a page to an uninitialized enclave.
- * %EINIT:	Change enclave to initialized state.
- * %EREMOVE:	Remove a page from an enclave.
- * %EDBGRD:	Read a word from an enclave.
- * %EDBGWR:	Write a word to an enclave.
- * %EEXTEND:	Measure 256 bytes of an added page.
- * %ELDU:	Load a reclaimed page in unblocked state.
- * %EBLOCK:	Change page state to blocked, which means that hardware threads
- *		cannot access it and create new TLB entries to it.
- * %EPA:	Create a Version Array (VA) page used to store the version
- *		numbers for 512 reclaimed EPC pages.
- * %EWB:	Reclaim a page to the regular memory.
- * %ETRACK:	Start a new shoot down sequence. Used to together with EBLOCK to
- *		make sure that a page is safe to swap.
- */
 enum sgx_encls_leaf {
 	ECREATE	= 0x00,
 	EADD	= 0x01,
@@ -83,11 +65,17 @@ enum sgx_encls_leaf {
  */
 static inline bool encls_failed(int ret)
 {
-	int epcm_trapnr =
-		boot_cpu_has(X86_FEATURE_SGX2) ? X86_TRAP_PF : X86_TRAP_GP;
-	bool fault = ret & ENCLS_FAULT_FLAG;
+        int epcm_trapnr;
 
-	return (fault && ENCLS_TRAPNR(ret) != epcm_trapnr) || (!fault && ret);
+        if (boot_cpu_has(X86_FEATURE_SGX2))
+                epcm_trapnr = X86_TRAP_PF;
+        else
+                epcm_trapnr = X86_TRAP_GP;
+
+        if (ret & ENCLS_FAULT_FLAG)
+                return ENCLS_TRAPNR(ret) != epcm_trapnr;
+
+        return !!ret;
 }
 
 /**

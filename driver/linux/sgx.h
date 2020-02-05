@@ -36,10 +36,6 @@ struct sgx_epc_section {
 	spinlock_t lock;
 };
 
-#define SGX_MAX_EPC_SECTIONS	8
-
-extern struct sgx_epc_section sgx_epc_sections[SGX_MAX_EPC_SECTIONS];
-
 /**
  * enum sgx_epc_page_desc - bits and masks for an EPC page's descriptor
  * %SGX_EPC_SECTION_MASK:	SGX allows to have multiple EPC sections in the
@@ -56,6 +52,10 @@ enum sgx_epc_page_desc {
 	SGX_EPC_PAGE_RECLAIMABLE		= BIT(4),
 	/* bits 12-63 are reserved for the physical page address of the page */
 };
+
+#define SGX_MAX_EPC_SECTIONS (SGX_EPC_SECTION_MASK + 1)
+
+extern struct sgx_epc_section sgx_epc_sections[SGX_MAX_EPC_SECTIONS];
 
 static inline struct sgx_epc_section *sgx_epc_section(struct sgx_epc_page *page)
 {
